@@ -1,51 +1,30 @@
 import torch
 import torchvision
-import torch.optim as optim
-import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
-import numpy as np
 import matplotlib.pyplot as plt
 from minicifar import minicifar_test
 from lab1_model import ResNet, BasicBlock
+from trainer import *
+from utils import *
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# Load the dataset
+test_loader = torch.utils.data.DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
 
+# Load the model
 resnet = ResNet(BasicBlock, [2, 2, 2, 2])
-resnet.to(device)
-resnet.eval()
+resnet.load_state_dict(torch.load("lab1_resnet.pth"))
+resnet = to_device(resnet)
 
-PATH = './lab1_resnet.pth'
-resnet.load_state_dict(torch.load(PATH))
+# Compute accuracy
+loss_fn = torch.nn.CrossEntropyLoss()
+_, accuracy = test_once(resnet, test_loader, loss_fn)
 
-testloader = torch.utils.data.DataLoader(minicifar_test, batch_size=32, shuffle=False, num_workers=2)
+print("accuracy={:.3f}".format(accuracy))
 
-dataiter = iter(testloader)
+# Show some examples
+classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+dataiter = iter(test_loader)
 images, labels = dataiter.next()
-
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
-def imshow(img):
-    img = img / 2 + 0.5     # unnormalize
-    npimg = img.numpy()
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
-    plt.show()
-
-correct = 0
-total = 0
-with torch.no_grad():  # torch.no_grad for TESTING
-    for data in testloader:
-        images, labels = data
-        images = images.to(device)
-        labels = labels.to(device)
-
-        outputs = resnet(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-
-print('Accuracy of the network on the test images: %d %%' % (100 * correct / total))
-
-# print images
-# imshow(torchvision.utils.make_grid(images))
-# print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
-# plt.show()
+imshow(torchvision.utils.make_grid(images))
+plt.savefig("lab1_resnet_examples.png")
+print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(32)))
