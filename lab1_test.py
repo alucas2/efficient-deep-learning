@@ -11,7 +11,7 @@ from utils import *
 test_loader = torch.utils.data.DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
 
 # Load the model
-resnet = ResNet(BasicBlock, [2, 2, 2, 2])
+resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
 resnet.load_state_dict(torch.load("lab1_resnet.pth"))
 resnet = to_device(resnet)
 

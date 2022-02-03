@@ -10,7 +10,7 @@ train_loader = DataLoader(minicifar_train, batch_size=32, sampler=train_sampler)
 valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
 
 # Create the model
-resnet = ResNet(BasicBlock, [2, 2, 2, 2])
+resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
 resnet = to_device(resnet)
 
 # Train the model
@@ -21,7 +21,7 @@ trainer = Trainer(
     optimizer=torch.optim.SGD(resnet.parameters(), lr=0.01),
     loss_fn=torch.nn.CrossEntropyLoss()
 )
-metrics = trainer.train(num_epochs=15)
+metrics = trainer.train(num_epochs=25)
 
 # Save the model
 torch.save(resnet.state_dict(), "lab1_resnet.pth")
