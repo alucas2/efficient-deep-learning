@@ -1,13 +1,12 @@
-from minicifar import minicifar_train,minicifar_test,train_sampler,valid_sampler
-from torch.utils.data.dataloader import DataLoader
-
-trainloader = DataLoader(minicifar_train,batch_size=4,sampler=train_sampler)
-validloader = DataLoader(minicifar_train,batch_size=4,sampler=valid_sampler)
-
 import torch
 import torch.optim as optim
 import torch.nn as nn
+from minicifar import minicifar_train,minicifar_test,train_sampler,valid_sampler
+from torch.utils.data.dataloader import DataLoader
 from lab1_model import ResNet, BasicBlock
+
+trainloader = DataLoader(minicifar_train, batch_size=32, sampler=train_sampler)
+validloader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

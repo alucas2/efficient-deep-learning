@@ -12,11 +12,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 resnet = ResNet(BasicBlock, [2, 2, 2, 2])
 resnet.to(device)
+resnet.eval()
 
 PATH = './lab1_resnet.pth'
 resnet.load_state_dict(torch.load(PATH))
 
-testloader = torch.utils.data.DataLoader(minicifar_test, batch_size=4, shuffle=False, num_workers=2)
+testloader = torch.utils.data.DataLoader(minicifar_test, batch_size=32, shuffle=False, num_workers=2)
 
 dataiter = iter(testloader)
 images, labels = dataiter.next()
