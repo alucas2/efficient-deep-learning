@@ -1,4 +1,5 @@
 import torch
+import tqdm
 
 def to_device(thing):
     """Host a tensor on GPU if available"""
@@ -76,7 +77,8 @@ class Trainer:
         output = TrainMetrics()
         for epoch_id in range(num_epochs):
             # Train
-            train_loss = train_once(self.model, self.train_loader, self.optimizer, self.loss_fn)
+            prograssbar_wrap = tqdm.tqdm(self.train_loader, desc="Epoch {}".format(epoch_id))
+            train_loss = train_once(self.model, prograssbar_wrap, self.optimizer, self.loss_fn)
             
             # Validate
             valid_loss, accuracy = test_once(self.model, self.valid_loader, self.loss_fn)

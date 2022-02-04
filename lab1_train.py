@@ -21,7 +21,7 @@ trainer = Trainer(
     optimizer=torch.optim.SGD(resnet.parameters(), lr=0.01),
     loss_fn=torch.nn.CrossEntropyLoss()
 )
-metrics = trainer.train(num_epochs=25)
+metrics = trainer.train(num_epochs=50)
 
 # Save the model
 torch.save(resnet.state_dict(), "lab1_resnet.pth")
