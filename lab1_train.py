@@ -10,21 +10,25 @@ train_loader = DataLoader(minicifar_train, batch_size=32, sampler=train_sampler)
 valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
 
 # Create the model
-resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
-resnet = to_device(resnet)
+model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
+model = to_device(model)
+
+# Count the parameters
+num_parameters = sum(p.numel() for p in model.parameters())
+print("Number of parameters: {}".format(num_parameters))
 
 # Train the model
 trainer = Trainer(
-    model=resnet,
+    model=model,
     train_loader=train_loader,
     valid_loader=valid_loader,
-    optimizer=torch.optim.SGD(resnet.parameters(), lr=0.01),
+    optimizer=torch.optim.SGD(model.parameters(), lr=0.01),
     loss_fn=torch.nn.CrossEntropyLoss()
 )
 metrics = trainer.train(num_epochs=50)
 
 # Save the model
-torch.save(resnet.state_dict(), "lab1_resnet.pth")
+torch.save(model.state_dict(), "lab1_resnet.pth")
 
 # Plot the metrics
 plt.plot(metrics.epochs, metrics.train_loss, label="Train loss")
