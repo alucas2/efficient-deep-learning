@@ -10,7 +10,8 @@ train_loader = DataLoader(minicifar_train, batch_size=32, sampler=train_sampler)
 valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
 
 # Create the model
-model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
+# model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
+model = ResNet(BasicBlock, [1, 1, 1, 1], num_classes=4)
 model = to_device(model)
 
 # Count the parameters
@@ -28,10 +29,10 @@ trainer = Trainer(
 metrics = trainer.train(num_epochs=50)
 
 # Save the model
-torch.save(model.state_dict(), "lab1_resnet.pth")
+torch.save(model.state_dict(), "lab1_miniresnet.pth")
 
 # Plot the metrics
 plt.plot(metrics.epochs, metrics.train_loss, label="Train loss")
 plt.plot(metrics.epochs, metrics.valid_loss, label="Validation loss")
 plt.legend()
-plt.savefig("lab1_resnet_train.png")
+plt.savefig("lab1_miniresnet_train.png")
