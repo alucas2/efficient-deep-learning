@@ -8,7 +8,7 @@ from trainer import *
 from utils import *
 
 # Load the dataset
-test_loader = torch.utils.data.DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
+test_loader = DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
 
 # Load the model
 # resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
@@ -28,5 +28,5 @@ classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 dataiter = iter(test_loader)
 images, labels = dataiter.next()
 imshow(torchvision.utils.make_grid(images))
-plt.savefig("lab1_resnet_examples.png")
+plt.savefig("lab1/resnet_examples.png")
 print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(32)))

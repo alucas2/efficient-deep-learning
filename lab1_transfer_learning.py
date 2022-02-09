@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 import models_cifar100
-from minicifar import minicifar_train, train_sampler, valid_sampler
+from lab1.minicifar import minicifar_train, train_sampler, valid_sampler
 from torch.utils.data.dataloader import DataLoader
 from trainer import *
 
