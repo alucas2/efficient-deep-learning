@@ -98,12 +98,8 @@ class Trainer:
             output.train_loss.append(train_loss)
             output.valid_loss.append(valid_loss)
             output.class_accuracy.append(class_accuracy)
-            print("Epoch {}: loss={}, validation_loss={}, accuracy={}, class_accuracy={}".format(
-                epoch_id,
-                round(train_loss, 3),
-                round(valid_loss, 3),
-                round(accuracy, 3),
-                [round(x, 3) for x in class_accuracy]
+            print("Epoch {}: loss={:.3f}, validation_loss={:.3f}, accuracy={:.3f}, class_accuracy={}".format(
+                epoch_id, train_loss, valid_loss, accuracy, [round(x, 3) for x in class_accuracy]
             ))
 
         # Training finished
