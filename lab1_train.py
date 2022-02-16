@@ -31,7 +31,7 @@ for model_name, model in [
         optimizer=torch.optim.SGD(model.parameters(), lr=0.01),
         loss_fn=torch.nn.CrossEntropyLoss()
     )
-    metrics = trainer.train(num_epochs=50)
+    metrics = trainer.train(num_epochs=100)
 
     fig_loss.gca().plot(metrics.epochs, metrics.train_loss, label="Train loss ({})".format(model_name))
     fig_loss.gca().plot(metrics.epochs, metrics.valid_loss, label="Validation loss ({})".format(model_name))
