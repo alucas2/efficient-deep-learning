@@ -10,7 +10,6 @@ from torch.autograd import Variable
 
 class BC():
     def __init__(self, model):
-
         # First we need to 
         # count the number of Conv2d and Linear
         # This will be used next in order to build a list of all 
@@ -48,40 +47,33 @@ class BC():
 
 
     def save_params(self):
-
         ### This loop goes through the list of target modules, and saves the corresponding weights into the list of saved_parameters
-
         for index in range(self.num_of_params):
             self.saved_params[index].copy_(self.target_modules[index].data)
 
     def binarization(self):
-
-        ### To be completed
-
         ### (1) Save the current full precision parameters using the save_params method
-
+        self.save_params()
         
-        1
         ### (2) Binarize the weights in the model, by iterating through the list of target modules and overwrite the values with their binary version
-        
+        for index in range(self.num_of_params):
+            self.target_modules[index].data = 2.0 * (self.target_modules[index].data >= 0) - 1.0
+
     def restore(self):
-
         ### restore the copy from self.saved_params into the model 
-
         for index in range(self.num_of_params):
             self.target_modules[index].data.copy_(self.saved_params[index])
-      
-    def clip(self):
 
+    def clip(self):
         ## To be completed 
         ## Clip all parameters to the range [-1,1] using Hard Tanh 
         ## you can use the nn.Hardtanh function
-
-        1
-
+        for index in range(self.num_of_params):
+            self.target_modules[index].data = nn.functional.hardtanh(
+                self.target_modules[index].data, min_val=-1.0, max_val=1.0
+            )
 
     def forward(self,x):
-
         ### This function is used so that the model can be used while training
         out = self.model(x)
         return out

@@ -11,10 +11,8 @@ from utils import *
 test_loader = DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
 
 # Load the model
-# resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
-# resnet.load_state_dict(torch.load("lab1_resnet.pth"))
-resnet = ResNet(BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=4)
-resnet.load_state_dict(torch.load("lab1_miniresnet.pth"))
+resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
+resnet.load_state_dict(torch.load("lab1/resnet18.pth"))
 resnet = to_device(resnet)
 
 # Compute accuracy
