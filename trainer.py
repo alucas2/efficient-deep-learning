@@ -2,6 +2,7 @@ import torch
 import tqdm
 import numpy as np
 import csv
+import random 
 
 # ----------------------------------------- Helper functions -----------------------------------------
 
@@ -45,7 +46,6 @@ def train_once(model, data_loader, optimizer, loss_fn):
         train_loss_sum / len(data_loader), # loss
         num_correct / num_tested # accuracy
     )
-
 
 def test_once(model, data_loader, loss_fn):
     """Test a model on a dataset. Returns the average loss, accuracy and accuracy for each class"""
@@ -142,3 +142,4 @@ class Trainer:
 
         # Training finished
         return metrics
+    
