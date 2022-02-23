@@ -1,5 +1,9 @@
 import torch
 import tqdm
+import numpy as np
+import csv
+
+# ----------------------------------------- Helper functions -----------------------------------------
 
 def to_device(thing):
     """Host a tensor on GPU if available"""
@@ -74,15 +78,33 @@ def test_once(model, data_loader, loss_fn):
     )
 
 
+# ----------------------------------------- Metrics -----------------------------------------
+
 class TrainMetrics:
     def __init__(self):
-        self.epochs = []
-        self.train_loss = []
-        self.train_accuracy = []
-        self.valid_loss = []
-        self.valid_accuracy = []
-        self.class_accuracy = []
+        self.dict = {}
 
+    def append_metrics(self, dict):
+        for k, v in dict.items():
+            if k in self.dict:
+                self.dict[k].append(v)
+            else:
+                self.dict[k] = [v]
+    
+    def __getitem__(self, k):
+        return self.dict[k]
+
+    def save(self, filename):
+        np.savetxt(filename,
+            np.array([v for v in self.dict.values()]).T,
+            header=" ".join(k for k in self.dict.keys())
+        )
+
+    def load(self, filename):
+        x = np.genfromtxt(filename, names=True)
+        self.dict = {k: x[k] for k in x.dtype.names}
+
+# ----------------------------------------- Trainer -----------------------------------------
 
 class Trainer:
     def __init__(self, model, train_loader, valid_loader, optimizer, loss_fn):
@@ -94,25 +116,29 @@ class Trainer:
 
     def train(self, num_epochs):
         """Train a validate on a number of epochs"""
-        output = TrainMetrics()
+        metrics = TrainMetrics()
         for epoch_id in range(num_epochs):
             # Train
-            prograssbar_wrap = tqdm.tqdm(self.train_loader, desc="Epoch {}".format(epoch_id))
+            prograssbar_wrap = tqdm.tqdm(self.train_loader, desc="Epoch {}".format(epoch_id), leave=False)
             train_loss, train_accuracy = train_once(self.model, prograssbar_wrap, self.optimizer, self.loss_fn)
             
             # Validate
             valid_loss, valid_accuracy, class_accuracy = test_once(self.model, self.valid_loader, self.loss_fn)
             
             # Save metrics
-            output.epochs.append(epoch_id)
-            output.train_loss.append(train_loss)
-            output.train_accuracy.append(train_accuracy)
-            output.valid_loss.append(valid_loss)
-            output.valid_accuracy.append(valid_accuracy)
-            output.class_accuracy.append(class_accuracy)
+            metrics.append_metrics({
+                "epoch": epoch_id,
+                "train_loss": train_loss,
+                "train_accuracy": train_accuracy,
+                "valid_loss": valid_loss,
+                "valid_accuracy": valid_accuracy,
+            })
+            metrics.append_metrics({
+                f"class_accuracy_{i}": class_accuracy[i] for i in range(len(class_accuracy))
+            })
             print("Epoch {}: train_loss={:.3f}, train_accuracy={:.3}, valid_loss={:.3f}, valid_accuracy={:.3f}, class_accuracy={}".format(
                 epoch_id, train_loss, train_accuracy, valid_loss, valid_accuracy, [round(x, 3) for x in class_accuracy]
             ))
 
         # Training finished
-        return output
+        return metrics
