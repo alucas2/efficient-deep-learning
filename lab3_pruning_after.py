@@ -2,32 +2,48 @@ import torch
 import copy
 import torch.nn.utils.prune as prune
 from torch.utils.data.dataloader import DataLoader
-from minicifar import minicifar_test
+from minicifar import minicifar_train, valid_sampler
 from lab1_model import ResNet, BasicBlock
 from trainer import *
 from utils import *
 import numpy as np
 
+GLOBAL_PRUNING = True
+
 # Load the dataset
-test_loader = DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
+valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
 
 # Load the model
-model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
-model.load_state_dict(torch.load("lab1/resnet18.pth"))
+model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[16, 32, 64, 128], num_classes=4)
+model.load_state_dict(torch.load("lab1/thinresnet18.pth"))
 model = to_device(model)
 loss_fn = torch.nn.CrossEntropyLoss()
 
 amounts = []
 accuracies = []
-for amount in np.linspace(0, 1, 20):
+for amount in np.linspace(0, 1, 50):
     # Pruned pretrained model
     pruned_model = copy.deepcopy(model)
+
+    if GLOBAL_PRUNING:
+        # Global pruning
+        parameters_to_prune = [
+            (m, "weight") for m in pruned_model.modules() if isinstance(m, torch.nn.Conv2d) or isinstance(m, torch.nn.Linear)
+        ]
+        prune.global_unstructured(parameters_to_prune, pruning_method=prune.L1Unstructured, amount=amount)
+    else:
+        # Local pruning
+        for m in pruned_model.modules():
+            if isinstance(m, torch.nn.Conv2d) or isinstance(m, torch.nn.Linear):
+                prune.l1_unstructured(m, name="weight", amount=amount)
+    
+    # Apply pruning
     for m in pruned_model.modules():
         if isinstance(m, torch.nn.Conv2d) or isinstance(m, torch.nn.Linear):
-            prune.l1_unstructured(m, name="weight", amount=amount)
             prune.remove(m, "weight")
-    
-    _, accuracy, class_accuracy = test_once(pruned_model, test_loader, loss_fn)
+
+    # Test
+    _, accuracy, class_accuracy = test_once(pruned_model, valid_loader, loss_fn)
     amount = pruning_amount(pruned_model)
     amounts.append(amount)
     accuracies.append(accuracy)
