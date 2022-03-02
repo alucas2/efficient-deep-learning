@@ -26,6 +26,12 @@ CLASS_NAMES = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 's
 def one_hot(num_classes):
     return lambda c: torch.Tensor([i == c for i in range(num_classes)])
 
+def to_same_device(thing, dest_device):
+    if dest_device.get_device() != 1:
+        return thing.to(dest_device.get_device())
+    else:
+        return thing
+
 # ----------------------------------------- Datasets -----------------------------------------
 
 def get_subset(dataset, num_classes, subset_size):
@@ -49,10 +55,10 @@ def get_cifar10_test(transform, target_transform=one_hot(10)):
     )
 
 def get_minicifar_train(transform):
-    return get_subset(get_cifar10_train(transform, one_hot(4)), 4, 3200)
+    return get_subset(get_cifar10_train(transform, one_hot(4)), 4, 6400)
 
 def get_minicifar_test(transform):
-    return get_subset(get_cifar10_test(transform, one_hot(4)), 4, 800)
+    return get_subset(get_cifar10_test(transform, one_hot(4)), 4, 1600)
 
 # ----------------------------------------- Weird batch manipulations -----------------------------------------
 
@@ -63,10 +69,11 @@ def batch_to_half(images, targets):
     return images.half(), targets.half()
 
 def batch_mixup(images, targets):
-    permutation = torch.randperm(images.size(0))
+    batch_size = images.size(0)
+    permutation = torch.randperm(batch_size)
     shuffled_images = images[permutation]
     shuffled_targets = targets[permutation]
-    mix = torch.rand(images.size(0)).to(images.get_device())
+    mix = to_same_device(torch.Tensor([np.random.beta(0.5, 0.5) for _ in range(batch_size)]), images)
     OP1 = "i, ijkl -> ijkl"
     OP2 = "i, ij -> ij"
     mixed_images = torch.einsum(OP1, mix, images) + torch.einsum(OP1, 1-mix, shuffled_images)
@@ -111,7 +118,7 @@ def summarize_dataset(dataset, preprocess):
     plt.show()
 
 if __name__ == "__main__":
-    summarize_dataset(get_cifar10_test(TRANSFORM_NONE), [batch_mixup])
+    summarize_dataset(get_cifar10_test(TRANSFORM_TRAIN), [batch_mixup])
 
     
 

@@ -6,7 +6,7 @@ from data import *
 from trainer2 import *
 import numpy as np
 
-USE_CIFAR10 = False
+USE_CIFAR10 = True
 USE_THIN_RESNET18 = False
 USE_HALF = False
 USE_MIXUP = True
@@ -54,6 +54,13 @@ if USE_MIXUP: # the train accuracy is garbage when mixup is activated
 
 # --------------------------------------------------------------------------------------------------------
 
+# Save the model summary
+with open(f"models/{model_name}.txt", "w") as f:
+    f.write(str(torchinfo.summary(
+        model, input_size=(BATCH_SIZE, 3, 32, 32), dtypes=[torch.half] if USE_HALF else [torch.float]
+    )))
+
+# Load data
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
@@ -69,9 +76,3 @@ metrics, best_model = trainer.train(num_epochs=150)
 # Save the model and metrics
 metrics.save(f"logs/{model_name}.csv")
 torch.save(best_model.state_dict(), f"models/{model_name}.pth")
-
-# Save the model summary
-with open(f"models/{model_name}.txt", "w") as f:
-    f.write(str(torchinfo.summary(
-        model, input_size=(BATCH_SIZE, 3, 32, 32), dtypes=[torch.half] if USE_HALF else [torch.float]
-    )))
