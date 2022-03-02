@@ -1,6 +1,6 @@
 import torch
 import matplotlib.pyplot as plt
-from minicifar import minicifar_train, train_sampler, valid_sampler,minicifar_test
+from data.minicifar_old import minicifar_train, train_sampler, valid_sampler,minicifar_test
 from torch.utils.data.dataloader import DataLoader
 from lab1_model import *
 from trainer import *
@@ -30,8 +30,8 @@ for epoch in range(num_epochs):
     #model.train()
     for i, (x, target) in enumerate(train_loader):
         
-        x = to_device(x)
-        target = to_device(target)
+        x = x.cuda()
+        target = x.cuda()
 
         # Reset the parameter gradients
         optimizer.zero_grad()

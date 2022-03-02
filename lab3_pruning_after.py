@@ -2,7 +2,7 @@ import torch
 import copy
 import torch.nn.utils.prune as prune
 from torch.utils.data.dataloader import DataLoader
-from minicifar import minicifar_train, valid_sampler
+from data import *
 from lab1_model import ResNet, BasicBlock
 from trainer import *
 from utils import *
@@ -11,11 +11,11 @@ import numpy as np
 GLOBAL_PRUNING = True
 
 # Load the dataset
-valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
+valid_loader = DataLoader(get_minicifar_test(TRANSFORM_TEST), batch_size=32, shuffle=True)
 
 # Load the model
 model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[16, 32, 64, 128], num_classes=4)
-model.load_state_dict(torch.load("lab1/thinresnet18.pth"))
+model.load_state_dict(torch.load("models/thinresnet18_for_minicifar.pth"))
 model = to_device(model)
 loss_fn = torch.nn.CrossEntropyLoss()
 

@@ -1,6 +1,6 @@
 import torch
 import matplotlib.pyplot as plt
-from minicifar import minicifar_train, train_sampler, valid_sampler,minicifar_test
+from data.minicifar_old import minicifar_train, train_sampler, valid_sampler,minicifar_test
 from torch.utils.data.dataloader import DataLoader
 from lab1_model import *
 from trainer import *

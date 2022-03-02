@@ -1,5 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
+
+def to_device(thing):
+    if torch.cuda.is_available():
+        return thing.cuda()
+    else:
+        return thing
 
 def imshow(img):
     img = img / 2 + 0.5     # unnormalize

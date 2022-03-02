@@ -2,22 +2,26 @@ import torch
 import torchvision
 from torch.utils.data.dataloader import DataLoader
 import matplotlib.pyplot as plt
-from minicifar import minicifar_test
 from lab1_model import ResNet, BasicBlock
-from trainer import *
+from data import *
+from trainer2 import *
 from utils import *
 
 # Load the dataset
-test_loader = DataLoader(minicifar_test, batch_size=32, shuffle=True, num_workers=2)
+test_loader = DataLoader(get_minicifar_test(TRANSFORM_TEST), batch_size=32, shuffle=True, num_workers=2)
 
 # Load the model
 resnet = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=4)
 resnet.load_state_dict(torch.load("lab1/resnet18.pth"))
-resnet = to_device(resnet)
+batch_preprocess = []
+
+if torch.cuda.is_available():
+    resnet = resnet.cuda()
+    batch_preprocess.append(batch_to_cuda)
 
 # Compute accuracy
-loss_fn = torch.nn.CrossEntropyLoss()
-_, accuracy = test_once(resnet, test_loader, loss_fn)
+loss_fn = CrossEntropyLoss()
+_, accuracy, _ = test_once(resnet, test_loader, loss_fn, batch_preprocess)
 
 print("accuracy={:.3f}".format(accuracy))
 

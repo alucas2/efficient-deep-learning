@@ -1,21 +1,21 @@
 import torch
 import torch.nn.utils.prune as prune
 from torch.utils.data.dataloader import DataLoader
-from minicifar import minicifar_train, train_sampler, valid_sampler
+from data import *
 from lab1_model import ResNet, BasicBlock
 from trainer import *
 from utils import *
 import numpy as np
 
-SOFT_PRUNING = True
+SOFT_PRUNING = False
 
 # Load the datasets
-train_loader = DataLoader(minicifar_train, batch_size=32, sampler=train_sampler)
-valid_loader = DataLoader(minicifar_train, batch_size=32, sampler=valid_sampler)
+train_loader = DataLoader(get_minicifar_train(TRANSFORM_TRAIN), batch_size=32, shuffle=True)
+valid_loader = DataLoader(get_minicifar_test(TRANSFORM_TEST), batch_size=32, shuffle=True)
 
 # Create the model
 model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[16, 32, 64, 128], num_classes=4)
-model.load_state_dict(torch.load("lab1/thinresnet18.pth"))
+model.load_state_dict(torch.load("models/thinresnet18_for_minicifar.pth"))
 model = to_device(model)
 
 amounts = []
@@ -45,13 +45,13 @@ for fine_tune_step in range(50):
         model=model,
         train_loader=train_loader,
         valid_loader=valid_loader,
+        loss=torch.nn.CrossEntropyLoss(),
         optimizer=torch.optim.SGD(model.parameters(), lr=0.01),
-        loss_fn=torch.nn.CrossEntropyLoss()
     )
     trainer.train(num_epochs=2)
 
     # Test
-    _, accuracy, _ = test_once(model, valid_loader, trainer.loss_fn)
+    _, accuracy, _ = test_once(model, valid_loader, trainer.valid_loss)
     accuracies.append(accuracy)
 
 
