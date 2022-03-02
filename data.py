@@ -1,8 +1,9 @@
-from math import perm
 import torch
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
+from cutout import *
+from autoaugmented import *
 
 # ----------------------------------------- Transforms -----------------------------------------
 
@@ -13,6 +14,15 @@ TRANSFORM_TRAIN = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
+
+TRANSFORM_TRAIN_AUTOAUGMENTED = transforms.Compose([
+    transforms.RandomCrop(32, padding=4, fill=128), # fill parameter needs torchvision installed from source
+    transforms.RandomHorizontalFlip(), CIFAR10Policy(), 
+	transforms.ToTensor(), 
+    Cutout(n_holes=1, length=16), # (https://github.com/uoguelph-mlrg/Cutout/blob/master/util/cutout.py)
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+])
+
 
 TRANSFORM_TEST = transforms.Compose([
     transforms.ToTensor(),
@@ -27,7 +37,7 @@ def one_hot(num_classes):
     return lambda c: torch.Tensor([i == c for i in range(num_classes)])
 
 def to_same_device(thing, dest_device):
-    if dest_device.get_device() != 1:
+    if dest_device.get_device() != -1:
         return thing.to(dest_device.get_device())
     else:
         return thing
@@ -118,7 +128,7 @@ def summarize_dataset(dataset, preprocess):
     plt.show()
 
 if __name__ == "__main__":
-    summarize_dataset(get_cifar10_test(TRANSFORM_TRAIN), [batch_mixup])
+    summarize_dataset(get_cifar10_test(TRANSFORM_TRAIN_AUTOAUGMENTED), [batch_mixup])
 
     
 
