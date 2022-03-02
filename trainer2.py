@@ -115,12 +115,6 @@ class TrainMetrics:
         self.dict = {k: x[k] for k in x.dtype.names}
 
 
-# ----------------------------------------- Parameters -----------------------------------------
-
-class TrainParams:
-    def __init__(self, mixup=False):
-        self.mixup = mixup
-
 # ----------------------------------------- Trainer -----------------------------------------
 
 class Trainer:

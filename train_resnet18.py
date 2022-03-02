@@ -7,7 +7,7 @@ from trainer2 import *
 import numpy as np
 
 USE_CIFAR10 = False
-USE_THIN_RESNET18 = True
+USE_THIN_RESNET18 = False
 USE_HALF = False
 USE_MIXUP = True
 BATCH_SIZE = 32
