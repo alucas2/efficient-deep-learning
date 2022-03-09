@@ -9,27 +9,45 @@ import numpy as np
 USE_CIFAR10 = True
 USE_THIN_RESNET18 = False
 USE_HALF = False
-USE_MIXUP = True
+USE_MIXUP = False
+USE_AUTOAUGMENTED= True 
 BATCH_SIZE = 32
 
 # Load the datasets
-if USE_CIFAR10:
+if USE_CIFAR10 and USE_AUTOAUGMENTED:
+    train_dataset = get_cifar10_train(TRANSFORM_TRAIN_AUTOAUGMENTED)
+    test_dataset = get_cifar10_test(TRANSFORM_TEST)
+    num_classes = 10
+    dataset_name = "cifar10"
+    transform= 'auto_tranform'
+
+elif USE_CIFAR10 and USE_AUTOAUGMENTED== False:
     train_dataset = get_cifar10_train(TRANSFORM_TRAIN)
     test_dataset = get_cifar10_test(TRANSFORM_TEST)
     num_classes = 10
     dataset_name = "cifar10"
+    transform= 'normal_tranform'
+
+elif USE_CIFAR10==False and USE_AUTOAUGMENTED== True :
+    train_dataset = get_minicifar_train(TRANSFORM_TRAIN_AUTOAUGMENTED)
+    test_dataset = get_minicifar_test(TRANSFORM_TEST)
+    num_classes = 4
+    dataset_name = "minicifar"
+    transform= 'auto_tranform'
+
 else:
     train_dataset = get_minicifar_train(TRANSFORM_TRAIN)
     test_dataset = get_minicifar_test(TRANSFORM_TEST)
     num_classes = 4
     dataset_name = "minicifar"
+    transform= 'normal_tranform'
 
 # Create the model
 if USE_THIN_RESNET18:
-    model_name = f"thinresnet18_for_{dataset_name}"
+    model_name = f"thinresnet18_for_{dataset_name}_{transform}"
     model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[32, 64, 128, 256], num_classes=num_classes)
 else:
-    model_name = f"normalresnet18_for_{dataset_name}"
+    model_name = f"normalresnet18_for_{dataset_name}_{transform}"
     model = ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[64, 128, 256, 512], num_classes=num_classes)
 
 # --------------------------------------------------------------------------------------------------------
@@ -54,13 +72,6 @@ if USE_MIXUP: # the train accuracy is garbage when mixup is activated
 
 # --------------------------------------------------------------------------------------------------------
 
-# Save the model summary
-with open(f"models/{model_name}.txt", "w") as f:
-    f.write(str(torchinfo.summary(
-        model, input_size=(BATCH_SIZE, 3, 32, 32), dtypes=[torch.half] if USE_HALF else [torch.float]
-    )))
-
-# Load data
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
@@ -76,3 +87,9 @@ metrics, best_model = trainer.train(num_epochs=150)
 # Save the model and metrics
 metrics.save(f"logs/{model_name}.csv")
 torch.save(best_model.state_dict(), f"models/{model_name}.pth")
+
+# Save the model summary
+with open(f"models/{model_name}.txt", "w") as f:
+    f.write(str(torchinfo.summary(
+        model, input_size=(BATCH_SIZE, 3, 32, 32), dtypes=[torch.half] if USE_HALF else [torch.float]
+    )))
