@@ -7,12 +7,15 @@ from autoaugmented import *
 
 # ----------------------------------------- Transforms -----------------------------------------
 
+CIFAR10_MEAN = np.array((0.4914, 0.4822, 0.4465))
+CIFAR10_STD = np.array((0.2023, 0.1994, 0.2010))
+
 # Data augmentation is needed in order to train from scratch
 TRANSFORM_TRAIN = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
 ])
 
 TRANSFORM_TRAIN_AUTOAUGMENTED = transforms.Compose([
@@ -20,13 +23,17 @@ TRANSFORM_TRAIN_AUTOAUGMENTED = transforms.Compose([
     transforms.RandomHorizontalFlip(), CIFAR10Policy(), 
 	transforms.ToTensor(), 
     Cutout(n_holes=1, length=16), # (https://github.com/uoguelph-mlrg/Cutout/blob/master/util/cutout.py)
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD)
 ])
-
 
 TRANSFORM_TEST = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+])
+
+TRANSFORM_TEST_INV = transforms.Compose([
+    transforms.Normalize(-CIFAR10_MEAN/CIFAR10_STD, 1/CIFAR10_STD),
+    transforms.ToPILImage()
 ])
 
 TRANSFORM_NONE = transforms.ToTensor()
