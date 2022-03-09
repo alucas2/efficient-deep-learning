@@ -36,11 +36,16 @@ class ResNet(nn.Module):
 
         self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(num_filters[0])
-        self.layer1 = self._make_layer(block, num_filters[0], num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, num_filters[1], num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, num_filters[2], num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, num_filters[3], num_blocks[3], stride=2)
-        self.linear = nn.Linear(num_filters[3]*block.expansion, num_classes)
+        
+        self.final_image_size = 32
+        conv_layers = []
+        for i in range(len(num_blocks)):
+            stride = 1 if i == 0 else 2
+            conv_layers.append(self._make_layer(block, num_filters[i], num_blocks[i], stride=stride))
+            self.final_image_size //= stride
+
+        self.conv_layers = nn.Sequential(*conv_layers)
+        self.linear = nn.Linear(num_filters[-1] * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -52,11 +57,18 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
+        out = self.conv_layers(out)
+        out = F.avg_pool2d(out, self.final_image_size)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+
+def make_resnet18(num_classes):
+    return ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[64, 128, 256, 512], num_classes=num_classes)
+
+def make_thinresnet18(num_classes):
+    return ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[64, 128, 256, 512], num_classes=num_classes)
+
+def make_resnet20(num_classes):
+    return ResNet(BasicBlock, num_blocks=[3, 3, 3], num_filters=[64, 128, 256], num_classes=num_classes)

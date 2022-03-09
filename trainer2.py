@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import tqdm
 import numpy as np
 import copy
+from utils import *
 
 # ----------------------------------------- Helper functions -----------------------------------------
 
@@ -104,6 +105,9 @@ class TrainMetrics:
     def __getitem__(self, k):
         return self.dict[k]
 
+    def __contains__(self, thing):
+        return thing in self.dict
+
     def save(self, filename):
         np.savetxt(filename,
             np.array([v for v in self.dict.values()]).T,
@@ -133,18 +137,18 @@ class Trainer:
         self.train_preprocess = train_preprocess if train_preprocess else []
         self.test_preprocess = test_preprocess if test_preprocess else []
         self.metrics = TrainMetrics()
+        self.current_epoch = 0
 
     def train(self, num_epochs) -> TrainMetrics:
         """Train a validate on a number of epochs"""
-        for epoch_id in range(num_epochs):
+        for self.current_epoch in range(self.current_epoch+1, self.current_epoch+num_epochs):
             # Train
-            prograssbar_wrap = tqdm.tqdm(self.train_loader, desc="Epoch {}".format(epoch_id), leave=False)
+            prograssbar_wrap = tqdm.tqdm(self.train_loader, desc=f"Epoch {self.current_epoch}", leave=False)
             train_loss, train_accuracy = train_once(
                 self.model, prograssbar_wrap, self.optimizer, self.loss_fn, self.train_preprocess
             )
             
             # Validate
-            current_lr = self.optimizer.param_groups[0]["lr"]
             valid_loss, valid_accuracy, class_accuracy = test_once(
                 self.model, self.valid_loader, self.loss_fn, self.test_preprocess
             )
@@ -154,13 +158,16 @@ class Trainer:
                 self.lr_scheduler.step()
 
             # Save metrics
+            current_lr = self.optimizer.param_groups[0]["lr"]
+            pruning = pruning_amount(self.model)
             self.metrics.append_metrics({
-                "epoch": epoch_id,
+                "epoch": self.current_epoch,
                 "train_loss": train_loss,
                 "train_accuracy": train_accuracy,
                 "valid_loss": valid_loss,
                 "valid_accuracy": valid_accuracy,
                 "learning_rate": current_lr,
+                "pruning": pruning
             })
             self.metrics.append_metrics({
                 f"class_accuracy_{i}": class_accuracy[i] for i in range(len(class_accuracy))
@@ -174,13 +181,14 @@ class Trainer:
                 self.best_model = copy.deepcopy(self.model)
 
             # Show step
-            print(f"epoch={epoch_id}, "
+            print(f"epoch={self.current_epoch}, "
                 + f"train_loss={train_loss:.3f}, "
                 + f"train_acc={train_accuracy:.3}, "
                 + f"val_loss={valid_loss:.3f}, "
                 + f"val_acc={valid_accuracy:.3f}, "
                 + f"class_acc={[round(x, 3) for x in class_accuracy]}, "
                 + f"lr={current_lr:.3f}, "
+                + f"pruning={pruning:.3f}, "
                 + f"best={better_model}"
             )
 

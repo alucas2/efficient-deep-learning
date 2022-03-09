@@ -29,4 +29,12 @@ plt.ylabel("Accuracy")
 plt.grid()
 plt.legend()
 
+if "pruning" in metrics:
+    plt.figure(f"Pruning amount - {filename}")
+    plt.plot(metrics["pruning"], metrics["valid_accuracy"], label="Validation")
+    plt.xlabel("Pruning amount")
+    plt.ylabel("Accuracy")
+    plt.grid()
+    plt.legend()
+
 plt.show()
