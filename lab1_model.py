@@ -68,7 +68,7 @@ def make_resnet18(num_classes):
     return ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[64, 128, 256, 512], num_classes=num_classes)
 
 def make_thinresnet18(num_classes):
-    return ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[64, 128, 256, 512], num_classes=num_classes)
+    return ResNet(BasicBlock, num_blocks=[2, 2, 2, 2], num_filters=[32, 64, 128, 256], num_classes=num_classes)
 
 def make_resnet20(num_classes):
     return ResNet(BasicBlock, num_blocks=[3, 3, 3], num_filters=[64, 128, 256], num_classes=num_classes)

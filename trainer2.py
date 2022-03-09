@@ -141,7 +141,7 @@ class Trainer:
 
     def train(self, num_epochs) -> TrainMetrics:
         """Train a validate on a number of epochs"""
-        for self.current_epoch in range(self.current_epoch+1, self.current_epoch+num_epochs):
+        for self.current_epoch in range(self.current_epoch+1, self.current_epoch+num_epochs+1):
             # Train
             prograssbar_wrap = tqdm.tqdm(self.train_loader, desc=f"Epoch {self.current_epoch}", leave=False)
             train_loss, train_accuracy = train_once(
