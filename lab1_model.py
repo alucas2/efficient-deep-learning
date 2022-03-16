@@ -31,7 +31,7 @@ class BasicBlock(nn.Module):
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_filters=[64, 128, 256, 512], num_classes=10):
-        super(ResNet, self).__init__()
+        super().__init__()
         self.in_planes = num_filters[0]
 
         self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, stride=1, padding=1, bias=False)

@@ -1,4 +1,5 @@
 from lab1_model import *
+from utils import pruning_amount
 
 def count_conv2d(m, x, y):
     x = x[0] # remove tuple
@@ -118,14 +119,22 @@ def score(model):
     flops, params = profile(model, (1,3,32,32))
     flops, params = flops.item(), params.item()
 
+    pruning_score = 1 - pruning_amount(model)
+    print(f"Pruning score: {pruning_score}")
+
     score_flops = flops / ref_flops
     score_params = params / ref_params
+    score_params *= pruning_score
     score = score_flops + score_params
+
     print("Flops: {}, Params: {}".format(flops,params))
     print("Score flops: {} Score Params: {}".format(score_flops,score_params))
     print("Final score: {}".format(score))
     return score
 
 if __name__ == "__main__":
-    model = make_thinresnet18(10)
+    from pruning import *
+
+    model = Pruned(make_resnet18(10))
+    model.load_state_dict(torch.load("models/normalresnet18_for_cifar10_pruned_mixup.pth"))
     score(model)
