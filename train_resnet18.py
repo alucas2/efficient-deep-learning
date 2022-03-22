@@ -3,18 +3,23 @@ import torchinfo
 from torch.utils.data.dataloader import DataLoader
 from lab1_model import *
 from data import *
-from trainer2 import *
+import trainer2
+import trainer3
+import trainer4
 from utils import *
 import numpy as np
 
 USE_CIFAR10 = True
 USE_THIN_RESNET18 = False
-USE_RESNET20 = True
+USE_RESNET20 = False
+USE_GROUP_RESNET18 = False
 USE_HALF = False
 USE_MIXUP = True
 USE_AUTOAUGMENTED = False
 USE_DISTILLATION = False
 BATCH_SIZE = 32
+USE_BINARIZATION = False
+USE_QUANTIZATION_AWARE = True
 
 dataset_description = []
 
@@ -45,6 +50,9 @@ if USE_THIN_RESNET18:
 elif USE_RESNET20:
     model_name = "resnet20"
     model = make_resnet20(num_classes)
+elif USE_GROUP_RESNET18:
+    model_name = "group_resnet18"
+    model = make_group_resnet18(num_classes)
 else:
     model_name = "normalresnet18"
     model = make_resnet18(num_classes)
@@ -78,6 +86,12 @@ if USE_DISTILLATION:
         teacher_model = teacher_model.cuda()
     loss = DistillationLoss(teacher_model, 0.5)
 
+if USE_BINARIZATION: # the train accuracy is garbage when mixup is activated
+    model_name += '_binarized'
+
+if USE_QUANTIZATION_AWARE:
+    model_name += '_quantized'
+
 # --------------------------------------------------------------------------------------------------------
 
 file_name = model_name + "_for_" + '_'.join(dataset_description)
@@ -91,8 +105,23 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[80, 120], gamma=0.1)
 
 # Train the model
-trainer = Trainer(model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
-metrics, best_model = trainer.train(num_epochs=150)
+if USE_BINARIZATION: 
+    trainer = trainer3.Trainer(model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
+    metrics, best_model = trainer.train(num_epochs=150)
+
+if USE_QUANTIZATION_AWARE:
+    model.load_state_dict(torch.load("/homes/r20benta/Documents/E-DEEP/potential-tribble/models/normalresnet18_for_cifar10_mixup.pth"))
+    fused_model= trainer4.model_fusion(model)
+    quantized_model = QuantizedResNet18(model_fp32=fused_model)
+    quantization_config = torch.quantization.get_default_qconfig("fbgemm")
+    quantized_model.qconfig = quantization_config
+    torch.quantization.prepare_qat(quantized_model, inplace=True)
+    trainer = trainer4.Trainer(quantized_model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
+    metrics, best_model = trainer.train(num_epochs=150)
+
+else:
+    trainer = trainer2.Trainer(model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
+    metrics, best_model = trainer.train(num_epochs=150)
 
 # Save the model and metrics
 metrics.save(f"logs/{file_name}.csv")
