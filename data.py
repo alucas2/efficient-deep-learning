@@ -135,7 +135,7 @@ def summarize_dataset(dataset, preprocess):
     plt.show()
 
 if __name__ == "__main__":
-    summarize_dataset(get_cifar10_test(TRANSFORM_TRAIN_AUTOAUGMENTED), [batch_mixup])
+    summarize_dataset(get_cifar10_test(TRANSFORM_TRAIN_AUTOAUGMENTED), [])
 
     
 
