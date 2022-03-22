@@ -7,17 +7,20 @@ import trainer2
 import trainer3
 import trainer4
 import numpy as np
+#import torch.quantization.quantize_fx as quantize_fx
+import copy
 
 USE_CIFAR10 = True
 USE_THIN_RESNET18 = False
 USE_RESNET20 = False
 USE_GROUP_RESNET18 = False
+USE_GROUP_RESNET20 = True 
 USE_HALF = False
 USE_MIXUP = True
 USE_AUTOAUGMENTED = False 
 BATCH_SIZE = 32
 USE_BINARIZATION = False
-USE_QUANTIZATION_AWARE = True
+USE_QUANTIZATION_AWARE = False
 
 dataset_description = []
 
@@ -51,6 +54,9 @@ elif USE_RESNET20:
 elif USE_GROUP_RESNET18:
     model_name = "group_resnet18"
     model = make_group_resnet18(num_classes)
+elif USE_GROUP_RESNET20:
+    model_name = "group_resnet20"
+    model = make_group_resnet20(num_classes)
 else:
     model_name = "normalresnet18"
     model = make_resnet18(num_classes)
@@ -99,15 +105,31 @@ if USE_BINARIZATION:
     trainer = trainer3.Trainer(model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
     metrics, best_model = trainer.train(num_epochs=150)
 
-if USE_QUANTIZATION_AWARE:
-    model.load_state_dict(torch.load("/homes/r20benta/Documents/E-DEEP/potential-tribble/models/normalresnet18_for_cifar10_mixup.pth"))
-    fused_model= trainer4.model_fusion(model)
-    quantized_model = QuantizedResNet18(model_fp32=fused_model)
-    quantization_config = torch.quantization.get_default_qconfig("fbgemm")
-    quantized_model.qconfig = quantization_config
-    torch.quantization.prepare_qat(quantized_model, inplace=True)
-    trainer = trainer4.Trainer(quantized_model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
-    metrics, best_model = trainer.train(num_epochs=150)
+#if USE_QUANTIZATION_AWARE:
+    # model.load_state_dict(torch.load("/homes/r20benta/Documents/E-DEEP/potential-tribble/models/normalresnet18_for_cifar10_mixup.pth"))
+    # model_to_quantize = copy.deepcopy(model)
+    # qconfig_dict = {"": torch.quantization.get_default_qat_qconfig('qnnpack')}
+    # model_to_quantize.train()
+    # prepare
+    #model_prepared = quantize_fx.prepare_qat_fx(model_to_quantize, qconfig_dict)
+    # training loop (not shown)
+    # quantize
+    #model_quantized = quantize_fx.convert_fx(model_prepared)
+
+    #
+    # fusion
+    #
+    # model_to_quantize = copy.deepcopy(model)
+    # model_fused = quantize_fx.fuse_fx(model_to_quantize)
+    # trainer = trainer2.Trainer(model_fused, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
+    # metrics, best_model = trainer.train(num_epochs=150)
+    # fused_model= trainer4.model_fusion(model)
+    # quantized_model = QuantizedResNet18(model_fp32=fused_model)
+    # quantization_config = torch.quantization.get_default_qconfig("fbgemm")
+    # quantized_model.qconfig = quantization_config
+    # torch.quantization.prepare_qat(quantized_model, inplace=True)
+    # trainer = trainer4.Trainer(quantized_model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
+    # metrics, best_model = trainer.train(num_epochs=150)
 
 else:
     trainer = trainer2.Trainer(model, train_loader, valid_loader, loss, optimizer, lr_scheduler, train_preprocess, test_preprocess)
