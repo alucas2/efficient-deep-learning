@@ -1,21 +1,11 @@
 from matplotlib.transforms import Transform
 import torch
-import torch.nn.functional as F
 import tqdm
 import numpy as np
 import copy
 from utils import *
 
 # ----------------------------------------- Helper functions -----------------------------------------
-
-class CrossEntropyLoss(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, input, target):
-        log_softmax = F.log_softmax(input, dim=1)
-        return -torch.sum(log_softmax * target) / input.size(0)
-
 
 def train_once(model, data_loader, optimizer, loss_fn, batch_preprocess):
     """Train a model on a dataset. Returns the average loss"""
@@ -33,7 +23,7 @@ def train_once(model, data_loader, optimizer, loss_fn, batch_preprocess):
 
         # Forward pass
         y = model(x)
-        loss = loss_fn(y, target)
+        loss = loss_fn(x, y, target)
 
         # Metrics
         train_loss_sum += loss.item()
@@ -72,7 +62,7 @@ def test_once(model, data_loader, loss_fn, batch_preprocess):
 
             # Forward pass
             y = model(x)
-            loss = loss_fn(y, target)
+            loss = loss_fn(x, y, target)
             valid_loss_sum += loss.item()
 
             # Count accuracy

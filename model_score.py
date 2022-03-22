@@ -7,12 +7,15 @@ def count_conv2d(m, x, y):
     fin = m.in_channels
     fout = m.out_channels
     sh, sw = m.kernel_size
+    groups = m.groups
 
     # ops per output element
     kernel_mul = sh * sw * fin
     kernel_add = sh * sw * fin - 1
     bias_ops = 1 if m.bias is not None else 0
     kernel_mul = kernel_mul/2 # FP16
+    kernel_mul /= groups
+    kernel_add /= groups
     ops = kernel_mul + kernel_add + bias_ops
 
     # total ops
@@ -134,7 +137,9 @@ def score(model):
 
 if __name__ == "__main__":
     from pruning import *
+    from quantization import *
 
-    model = Pruned(make_resnet18(10))
-    model.load_state_dict(torch.load("models/normalresnet18_for_cifar10_pruned_mixup.pth"))
+    model = make_group_resnet18(10)
+    # model = make_resnet18(10)
+    # model.load_state_dict(torch.load("models/resnet20_for_cifar10_pruned_mixup.pth"))
     score(model)

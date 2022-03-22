@@ -6,6 +6,7 @@ from data import *
 import trainer2
 import trainer3
 import trainer4
+from utils import *
 import numpy as np
 #import torch.quantization.quantize_fx as quantize_fx
 import copy
@@ -17,7 +18,8 @@ USE_GROUP_RESNET18 = False
 USE_GROUP_RESNET20 = True 
 USE_HALF = False
 USE_MIXUP = True
-USE_AUTOAUGMENTED = False 
+USE_AUTOAUGMENTED = False
+USE_DISTILLATION = False
 BATCH_SIZE = 32
 USE_BINARIZATION = False
 USE_QUANTIZATION_AWARE = False
@@ -65,6 +67,7 @@ else:
 
 train_preprocess = []
 test_preprocess = []
+loss = CrossEntropyLoss()
 
 if torch.cuda.is_available():
     model = model.cuda()
@@ -81,6 +84,14 @@ if USE_MIXUP: # the train accuracy is garbage when mixup is activated
     dataset_description.append("mixup")
     train_preprocess.append(batch_mixup)
 
+if USE_DISTILLATION:
+    dataset_description.append("distil")
+    teacher_model = make_resnet20(num_classes)
+    teacher_model.load_state_dict(torch.load("models/resnet20_for_cifar10_mixup.pth"))
+    if torch.cuda.is_available():
+        teacher_model = teacher_model.cuda()
+    loss = DistillationLoss(teacher_model, 0.5)
+
 if USE_BINARIZATION: # the train accuracy is garbage when mixup is activated
     model_name += '_binarized'
 
@@ -96,7 +107,6 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Training settings
-loss = trainer2.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[80, 120], gamma=0.1)
 
