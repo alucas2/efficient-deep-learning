@@ -4,6 +4,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from cutout import *
 from autoaugmented import *
+from utils import *
 
 # ----------------------------------------- Transforms -----------------------------------------
 
@@ -42,12 +43,6 @@ CLASS_NAMES = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 's
 
 def one_hot(num_classes):
     return lambda c: torch.Tensor([i == c for i in range(num_classes)])
-
-def to_same_device(thing, dest_device):
-    if dest_device.get_device() != -1:
-        return thing.to(dest_device.get_device())
-    else:
-        return thing
 
 # ----------------------------------------- Datasets -----------------------------------------
 

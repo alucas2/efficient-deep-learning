@@ -8,14 +8,16 @@ from trainer2 import *
 from utils import *
 import numpy as np
 import copy
+from pruning import *
 
-BASE_MODEL_PATH = "models/normalresnet18_for_cifar10_mixup.pth"
+BASE_MODEL_PATH = "models/resnet20_for_cifar10_mixup.pth"
 USE_CIFAR10 = True
 USE_THIN_RESNET18 = False
 USE_RESNET20 = True
 USE_HALF = False
-USE_MIXUP = False
+USE_MIXUP = True
 USE_AUTOAUGMENTED= False 
+USE_DISTILLATION = True
 BATCH_SIZE = 32
 
 dataset_description = []
@@ -53,12 +55,14 @@ else:
 
 # Load the base model
 model.load_state_dict(torch.load(BASE_MODEL_PATH))
+model = Pruned(model)
 dataset_description.append("pruned")
 
 # --------------------------------------------------------------------------------------------------------
 
 train_preprocess = []
 test_preprocess = []
+loss = CrossEntropyLoss()
 
 if torch.cuda.is_available():
     model = model.cuda()
@@ -74,6 +78,14 @@ if USE_HALF:
 if USE_MIXUP: # the train accuracy is garbage when mixup is activated
     dataset_description.append("mixup")
     train_preprocess.append(batch_mixup)
+
+if USE_DISTILLATION:
+    dataset_description.append("distil")
+    teacher_model = make_resnet20(num_classes)
+    teacher_model.load_state_dict(torch.load("models/resnet20_for_cifar10_mixup.pth"))
+    if torch.cuda.is_available():
+        teacher_model = teacher_model.cuda()
+    loss = DistillationLoss(teacher_model, 0.5)
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -94,9 +106,7 @@ trainer = Trainer(model, train_loader, valid_loader, loss, optimizer, lr_schedul
 best_pruned_model = None
 for fine_tune_step in range(10):
     # Prune the model
-    for m in model.modules():
-        if isinstance(m, torch.nn.Conv2d) or isinstance(m, torch.nn.Linear):
-            prune.l1_unstructured(m, name="weight", amount=0.3)
+    model.prune_unstructured(0.3)
 
     metrics, _ = trainer.train(num_epochs=2)
     if best_pruned_model is None or metrics["valid_accuracy"][-1] > 0.9:
