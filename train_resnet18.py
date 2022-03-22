@@ -57,7 +57,7 @@ elif USE_GROUP_RESNET18:
     model_name = "group_resnet18"
     model = make_group_resnet18(num_classes)
 elif USE_GROUP_RESNET20:
-    model_name = "group_resnet20"
+    model_name = "group8_resnet20"
     model = make_group_resnet20(num_classes)
 else:
     model_name = "normalresnet18"
