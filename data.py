@@ -54,6 +54,8 @@ def get_subset(dataset, num_classes, subset_size):
         indices = np.concatenate((indices, class_indices[:subset_size//num_classes]))
     return torch.utils.data.Subset(dataset, indices)
 
+# CIFAR 10
+
 def get_cifar10_train(transform, target_transform=one_hot(10)):
     print("Loading cifar10_train...")
     return torchvision.datasets.CIFAR10(
@@ -65,6 +67,22 @@ def get_cifar10_test(transform, target_transform=one_hot(10)):
     return torchvision.datasets.CIFAR10(
         "data/cifar10", train=False, download=True, transform=transform, target_transform=target_transform
     )
+
+# CIFAR 100
+
+def get_cifar100_train(transform, target_transform=one_hot(100)):
+    print("Loading cifar100_train...")
+    return torchvision.datasets.CIFAR100(
+        "data/cifar100", train=True, download=True, transform=transform, target_transform=target_transform
+    )
+
+def get_cifar100_test(transform, target_transform=one_hot(100)):
+    print("Loading cifar100_test...")
+    return torchvision.datasets.CIFAR100(
+        "data/cifar100", train=False, download=True, transform=transform, target_transform=target_transform
+    )
+
+# MINICIFAR
 
 def get_minicifar_train(transform):
     return get_subset(get_cifar10_train(transform, one_hot(4)), 4, 6400)

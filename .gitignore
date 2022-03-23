@@ -1,3 +1,4 @@
 data/cifar10/
+data/cifar100/
 micronet-ressources/
 __pycache__/

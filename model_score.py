@@ -139,7 +139,8 @@ if __name__ == "__main__":
     from pruning import *
     from quantization import *
 
-    model = make_group_resnet18(10)
+    model = make_group_resnet20(10)
+    model.load_state_dict(torch.load("models/group_resnet20_for_cifar10_mixup.pth"))
     # model = make_resnet18(10)
     # model.load_state_dict(torch.load("models/resnet20_for_cifar10_pruned_mixup.pth"))
     score(model)
